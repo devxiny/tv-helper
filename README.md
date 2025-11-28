@@ -94,6 +94,18 @@ You can show the QR code dialog programmatically:
 TvHelper.showDialog(this) // 'this' is your FragmentActivity
 ```
 
+#### QR Code Interface
+
+Below is a screenshot of the QR code popup dialog:
+
+![QR Code Interface](images/qrcode.png)
+
+#### Web Control Interface
+
+By scanning the QR code or directly accessing the provided address in a browser, you can open the web control interface. Here's an example screenshot of the web interface:
+
+![Web Control Interface](images/web.png)
+
 ### 3. Bind a Toggle Key (Optional)
 
 You can bind a key (e.g., the Menu key) to toggle the dialog visibility.
