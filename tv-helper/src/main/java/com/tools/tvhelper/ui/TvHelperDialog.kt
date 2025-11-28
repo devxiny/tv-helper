@@ -1,6 +1,7 @@
 package com.tools.tvhelper.ui
 
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,35 +9,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.tools.tvhelper.R
-import com.tools.tvhelper.TvControlConfig
-import com.tools.tvhelper.server.TvHttpServer
-import com.tools.tvhelper.utils.NetworkUtils
+import com.tools.tvhelper.TvHelper
 import com.tools.tvhelper.utils.QrCodeGenerator
-import java.util.Random
 
 class TvHelperDialog : DialogFragment() {
 
-    private var server: TvHttpServer? = null
-    private var config: TvControlConfig? = null
-    private var listener: ((String, Map<String, String>?) -> Unit)? = null
-
     companion object {
-        fun newInstance(config: TvControlConfig): TvHelperDialog {
-            val fragment = TvHelperDialog()
-            val args = Bundle()
-            args.putSerializable("config", config)
-            fragment.arguments = args
-            return fragment
+        fun newInstance(): TvHelperDialog {
+            return TvHelperDialog()
         }
-    }
-
-    fun setListener(listener: (String, Map<String, String>?) -> Unit) {
-        this.listener = listener
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        config = arguments?.getSerializable("config") as? TvControlConfig
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -45,41 +26,37 @@ class TvHelperDialog : DialogFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        val ip = NetworkUtils.getIpAddress(requireContext())
-        if (ip == null) {
-            view.findViewById<TextView>(R.id.tv_url).text = "No Wi-Fi Connection"
+
+        val url = TvHelper.getServerUrl(requireContext())
+        if (url == null) {
+            view.findViewById<TextView>(R.id.tv_url).text = "Server not running or No Wi-Fi"
             return
         }
 
-        val port = 8000 + Random().nextInt(1000)
-        val url = "http://$ip:$port"
-        
         view.findViewById<TextView>(R.id.tv_url).text = url
-        
+
         val qrBitmap = QrCodeGenerator.generate(url)
         view.findViewById<ImageView>(R.id.iv_qr_code).setImageBitmap(qrBitmap)
-
-        startServer(port)
     }
 
-    private fun startServer(port: Int) {
-        config?.let { cfg ->
-            server = TvHttpServer(requireContext(), port, cfg) { action, data ->
-                activity?.runOnUiThread {
-                    listener?.invoke(action, data)
+    override fun onDismiss(dialog: android.content.DialogInterface) {
+        super.onDismiss(dialog)
+        TvHelper.onDialogDismissed()
+    }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
+        val dialog = super.onCreateDialog(savedInstanceState)
+        dialog.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_UP) {
+                // Check if this is the toggle key
+                val toggleKey = TvHelper.getToggleKey()
+                if (toggleKey != -1 && keyCode == toggleKey) {
+                    dismiss()
+                    return@setOnKeyListener true
                 }
             }
-            try {
-                server?.start()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            false
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        server?.stop()
+        return dialog
     }
 }
