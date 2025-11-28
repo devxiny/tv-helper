@@ -47,7 +47,7 @@ Add TvHelper to your app's `build.gradle`:
 
 ```gradle
 dependencies {
-    implementation 'com.github.devxiny:tv-helper:1.0.1'
+    implementation 'com.github.devxiny:tv-helper:1.0.2'
 }
 ```
 
