@@ -61,7 +61,7 @@ afterEvaluate {
 
                 groupId = "com.devxiny.lib"
                 artifactId = "tv-helper"
-                version = "1.0.1"
+                version = "1.0.2"
             }
         }
     }
